@@ -13,7 +13,8 @@
 from alembic import context
 from sqlalchemy import create_engine, pool
 
-from warehouse import db
+import warehouse.config
+import warehouse.db
 
 
 def run_migrations_offline():
@@ -45,14 +46,13 @@ def run_migrations_online():
     connectable = context.config.attributes.get("connection", None)
 
     if connectable is None:
-        options = context.config.get_section(context.config.config_ini_section)
-        url = options.pop("url")
+        url = warehouse.config.configure().registry.settings["database.url"]
         connectable = create_engine(url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=db.metadata,
+            target_metadata=warehouse.db.metadata,
             compare_server_default=True,
         )
         with context.begin_transaction():
